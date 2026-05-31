@@ -51,7 +51,7 @@ SERVER_HOST = os.environ.get('SERVER_HOST', 'http://YOUR_SERVER_IP:5000')
 ```
 
 替换 `YOUR_SERVER_IP` 为您的实际服务器 IP 地址，例如：
-- `http://47.120.24.142:5000`
+- `http://XXX.XXX.XXX.XXX:XXXX`
 
 或者通过环境变量设置：
 ```bash
