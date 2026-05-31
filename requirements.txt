@@ -1,0 +1,5 @@
+# VRCHAT Video Stream Server - Dependencies
+# Minimal dependencies for the Flask-based video streaming application
+
+Flask>=2.3.0
+Werkzeug>=2.3.0
