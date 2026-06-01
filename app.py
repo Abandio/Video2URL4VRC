@@ -24,11 +24,11 @@ from werkzeug.utils import secure_filename
 app = Flask(__name__, template_folder='templates', static_folder='static')
 
 # Configuration
-SERVER_HOST = os.environ.get('SERVER_HOST', 'http://47.120.24.142:5000')
-WORKSPACE_DIR = os.environ.get('WORKSPACE_DIR', '/root/projects')
-VIDEO_FOLDER = f'{WORKSPACE_DIR}/data/videos'
-UPLOAD_FOLDER = f'{WORKSPACE_DIR}/data/uploads'
-TEMP_FOLDER = f'{WORKSPACE_DIR}/data/temp'
+SERVER_HOST = os.environ.get('SERVER_HOST', 'http://YOUR_SERVER_IP:5000')
+WORKSPACE_DIR = '/root/projects'  # 代码目录
+VIDEO_FOLDER = '/opt/workspace/data/videos'  # 视频存储目录
+UPLOAD_FOLDER = '/root/projects/data/uploads'  # 元数据存储目录
+TEMP_FOLDER = '/opt/workspace/data/temp'  # 临时处理目录
 
 # VRCHAT compatible formats (must be H.264 video + AAC audio)
 VRCHAT_COMPATIBLE_VIDEO = {'h264', 'avc', 'mpeg4'}
@@ -320,7 +320,7 @@ def get_all_videos(folder=None):
             continue
 
         file_size = os.path.getsize(filepath)
-        duration, codec, width, height = get_video_info_simple(filepath)
+        duration, _, codec, width, height = get_video_info_simple(filepath)
 
         videos.append({
             'id': video_id,
@@ -481,7 +481,7 @@ def upload_video():
 
         # Get file info
         file_size = os.path.getsize(final_path)
-        duration, codec, width, height = get_video_info_simple(final_path)
+        duration, _, codec, width, height = get_video_info_simple(final_path)
 
         # Save metadata
         metadata = {

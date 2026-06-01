@@ -1,0 +1,20 @@
+nohup: ignoring input
+==================================================
+VRCHAT Video Stream Server
+==================================================
+Server URL: http://YOUR_SERVER_IP:5000
+Video Folder: /opt/workspace/data/videos
+
+Features:
+  - Auto format detection
+  - Optional transcoding
+  - VRCHAT compatible output
+
+Web Interface: http://localhost:5000
+Video Streaming: http://localhost:5000/stream/
+
+==================================================
+ * Serving Flask app 'app'
+ * Debug mode: off
+Address already in use
+Port 5000 is in use by another program. Either identify and stop that program, or start the server with a different port.

@@ -683,6 +683,7 @@
     <script>
         let currentFolder = '';
         let currentVideoId = null;
+        let currentAnalyzeVideoId = null;  // Store video_id from analyze
         let allFolders = [];
         let pendingFile = null;
 
@@ -761,6 +762,9 @@
 
         // Show format modal
         function showFormatModal(data, file) {
+            // Store video_id from analyze response
+            currentAnalyzeVideoId = data.video_id;
+
             document.getElementById('infoFilename').textContent = data.filename || file.name;
             document.getElementById('infoVideoCodec').textContent = data.video_codec?.toUpperCase() || 'unknown';
             document.getElementById('infoAudioCodec').textContent = data.audio_codec?.toUpperCase() || 'unknown';
@@ -816,32 +820,21 @@
                 return;
             }
 
+            if (!currentAnalyzeVideoId) {
+                showToast('分析信息丢失，请重新选择文件', 'error');
+                return;
+            }
+
             const modal = document.getElementById('formatModal');
             modal.classList.remove('show');
 
-            // Get video_id from the analyze response stored in pendingFile
-            const formData = new FormData();
-            formData.append('video', pendingFile);
-
+            // Use the video_id stored from analyze response
             try {
-                // First analyze to get video_id (and save analysis to temp file)
-                const analyzeResponse = await fetch('/api/analyze', {
-                    method: 'POST',
-                    body: formData
-                });
-                const analyzeData = await analyzeResponse.json();
-
-                if (analyzeData.error) {
-                    showToast(analyzeData.error, 'error');
-                    return;
-                }
-
-                // Now upload - transcoding decision is made automatically based on format
                 const uploadResponse = await fetch('/api/upload', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({
-                        video_id: analyzeData.video_id,
+                        video_id: currentAnalyzeVideoId,
                         folder: currentFolder
                     })
                 });
@@ -859,12 +852,14 @@
             }
 
             pendingFile = null;
+            currentAnalyzeVideoId = null;  // Clear stored video_id
             document.getElementById('fileInput').value = '';
         }
 
         // Cancel upload
         function cancelUpload() {
             pendingFile = null;
+            currentAnalyzeVideoId = null;  // Clear stored video_id
             document.getElementById('fileInput').value = '';
             document.getElementById('formatModal').classList.remove('show');
         }

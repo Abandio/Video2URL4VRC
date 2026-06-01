@@ -1,5 +1,6 @@
 #!/bin/bash
 # VRCHAT Video Stream Server - Startup Script
+# Production version with separated directories
 
 set -e
 
@@ -7,19 +8,24 @@ echo "========================================="
 echo "VRCHAT Video Stream Server"
 echo "========================================="
 
-# Configuration - Change this to your actual data directory on production
-WORKSPACE_DIR="${WORKSPACE_DIR:-/opt/workspace}"
-DATA_DIR="$WORKSPACE_DIR/data"
+# Configuration - Production directories
+CODE_DIR="/root/projects"
+DATA_DIR="/opt/workspace/data"
 
-# Create directories
-echo "[1/4] Creating directories..."
-mkdir -p "$DATA_DIR/uploads"
-mkdir -p "$DATA_DIR/raw"
+# Server IP - Change this to your actual server IP
+SERVER_IP="YOUR_SERVER_IP"
+
+echo "[1/5] Creating directories..."
 mkdir -p "$DATA_DIR/videos"
-chmod -R 777 "$WORKSPACE_DIR"
+mkdir -p "$DATA_DIR/temp"
+mkdir -p "$CODE_DIR/data/uploads"
+chmod -R 777 "$DATA_DIR"
+chmod -R 777 "$CODE_DIR/data/uploads"
+echo "      Code directory: $CODE_DIR"
+echo "      Data directory: $DATA_DIR"
 
 # Check FFmpeg
-echo "[2/4] Checking FFmpeg..."
+echo "[2/5] Checking FFmpeg..."
 if command -v ffmpeg &> /dev/null; then
     ffmpeg -version | head -n 1
 else
@@ -27,17 +33,28 @@ else
     exit 1
 fi
 
-# Install Python dependencies
-echo "[3/4] Installing Python dependencies..."
-pip install flask werkzeug --quiet 2>/dev/null || pip install flask werkzeug
+# Check Python dependencies
+echo "[3/5] Checking Python dependencies..."
+if python -c "import flask" 2>/dev/null; then
+    echo "      Flask: OK"
+else
+    echo "      Installing Flask..."
+    pip install flask werkzeug --quiet
+fi
+
+# Update app.py with correct paths
+echo "[4/5] Updating configuration..."
+sed -i "s|WORKSPACE_DIR = '/root/projects'|WORKSPACE_DIR = '$CODE_DIR'|g" "$CODE_DIR/app.py"
+sed -i "s|VIDEO_FOLDER = '/opt/workspace/data/videos'|VIDEO_FOLDER = '$DATA_DIR/videos'|g" "$CODE_DIR/app.py"
+sed -i "s|UPLOAD_FOLDER = '/root/projects/data/uploads'|UPLOAD_FOLDER = '$CODE_DIR/data/uploads'|g" "$CODE_DIR/app.py"
+sed -i "s|TEMP_FOLDER = '/opt/workspace/data/temp'|TEMP_FOLDER = '$DATA_DIR/temp'|g" "$CODE_DIR/app.py"
+sed -i "s|http://47.120.24.142:5000|http://$SERVER_IP:5000|g" "$CODE_DIR/app.py"
+echo "      Paths updated"
 
 # Stop existing services if any
-echo "[4/4] Starting services..."
+echo "[5/5] Starting service..."
 pkill -f "python.*app.py" 2>/dev/null || true
 sleep 1
-
-# Update app.py to use correct directory
-sed -i "s|WORKSPACE_DIR = '/opt/workspace'|WORKSPACE_DIR = '$WORKSPACE_DIR'|g" /root/projects/app.py
 
 # Start Flask app
 echo ""
@@ -45,10 +62,11 @@ echo "========================================="
 echo "Service Started!"
 echo "========================================="
 echo ""
-echo "Web Interface: http://47.120.24.142:5000"
-echo "Video Streaming: http://47.120.24.142:5000/stream/"
+echo "Web Interface: http://$SERVER_IP:5000"
+echo "Video Streaming: http://$SERVER_IP:5000/stream/"
 echo ""
 echo "Press Ctrl+C to stop service"
 echo "========================================="
-export SERVER_HOST='http://47.120.24.142:5000/'
-python /root/projects/app.py
+
+cd "$CODE_DIR"
+python app.py
